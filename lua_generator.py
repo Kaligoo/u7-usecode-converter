@@ -5,8 +5,18 @@ Converts parsed usecode functions into readable Lua scripts.
 """
 
 from typing import List, Dict, Optional, Set
+import json
+import os
 from usecode_parser import UsecodeFunction, Instruction, DataSegment
 from intrinsic_mapping import get_lua_function, get_function_description, EVENT_TYPES
+from bytecode_translator_v3 import translate_function
+
+# Load function comments from U7Revisited
+FUNCTION_COMMENTS = {}
+comments_file = os.path.join(os.path.dirname(__file__), 'function_comments.json')
+if os.path.exists(comments_file):
+    with open(comments_file, 'r', encoding='utf-8') as f:
+        FUNCTION_COMMENTS = json.load(f)
 
 
 class LuaGenerator:
@@ -20,14 +30,14 @@ class LuaGenerator:
         """Generate complete Lua function from usecode."""
         lines = []
 
+        # Add descriptive comment if available
+        func_num_hex = f"{func.func_number:04X}"
+        if func_num_hex in FUNCTION_COMMENTS:
+            lines.append(f"--- {FUNCTION_COMMENTS[func_num_hex]}")
+
         # Generate header comment
         lines.extend(self._generate_header(func, func_name))
         lines.append("")
-
-        # Generate constants for event types if needed
-        if self._uses_event_checks(func):
-            lines.extend(self._generate_event_constants())
-            lines.append("")
 
         # Generate data segment as local strings
         if func.data_segments:
@@ -120,20 +130,23 @@ class LuaGenerator:
         """Generate function body from instructions."""
         lines = []
 
-        # For now, generate a simple comment-based representation
-        # Full implementation would convert each instruction to Lua
-        lines.append(self._indent("-- TODO: Convert bytecode to Lua"))
-        lines.append(self._indent("-- This requires a full instruction-to-Lua translator"))
-        lines.append("")
-
-        # Show basic structure
-        lines.append(self._indent("-- Original instructions:"))
-        for inst in func.instructions[:10]:  # Show first 10
-            comment = self._format_instruction_comment(inst, func)
-            lines.append(self._indent(f"-- {inst.address:04X}: {comment}"))
-
-        if len(func.instructions) > 10:
-            lines.append(self._indent(f"-- ... and {len(func.instructions) - 10} more instructions"))
+        # Use bytecode translator to convert to Lua
+        try:
+            translated = translate_function(func)
+            if translated:
+                lines.extend(translated)
+            else:
+                # Fallback if translation produces nothing
+                lines.append(self._indent("-- Empty function body"))
+        except Exception as e:
+            # Fallback to comment-based representation on error
+            lines.append(self._indent(f"-- Translation error: {str(e)}"))
+            lines.append(self._indent("-- Original instructions:"))
+            for inst in func.instructions[:20]:
+                comment = self._format_instruction_comment(inst, func)
+                lines.append(self._indent(f"-- {inst.address:04X}: {comment}"))
+            if len(func.instructions) > 20:
+                lines.append(self._indent(f"-- ... and {len(func.instructions) - 20} more instructions"))
 
         return lines
 
