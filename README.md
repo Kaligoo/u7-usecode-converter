@@ -31,21 +31,25 @@ Create **better quality** Lua conversions that are:
 ### Completed
 - [x] Repository setup
 - [x] Analyzed U7Revisited engine Lua API
-- [x] Mapped intrinsic functions (partial)
+- [x] Mapped 80+ intrinsic functions
 - [x] Studied usecode.dis format
+- [x] Built usecode parser
+- [x] Implemented Lua code generator
+- [x] Created main converter tool
 
 ### In Progress
-- [ ] Complete intrinsic function mapping
-- [ ] Build usecode parser
-- [ ] Implement Lua code generator
-- [ ] Test conversions
+- [ ] Advanced bytecode-to-Lua translation
+- [ ] Semantic variable name inference
+- [ ] Control flow analysis (if/while/for generation)
+- [ ] Test conversions against engine
 
 ## Files
 
-- **`intrinsic_mapping.py`** - Mapping of usecode intrinsics to Lua API functions
-- **`usecode_parser.py`** - Parser for usecode.dis format _(coming soon)_
-- **`lua_generator.py`** - Generates improved Lua code _(coming soon)_
-- **`converter.py`** - Main conversion tool _(coming soon)_
+- **`intrinsic_mapping.py`** - Mapping of 80+ usecode intrinsics to Lua API functions
+- **`usecode_parser.py`** - Parser for usecode.dis format
+- **`lua_generator.py`** - Generates improved Lua code
+- **`converter.py`** - Main conversion tool
+- **`PARSER_DESIGN.md`** - Parser design documentation
 
 ## How It Works
 
@@ -86,6 +90,52 @@ function ship_gangplank_handler(eventid, objectref)
     -- ...
 end
 ```
+
+## Usage
+
+### Requirements
+- Python 3.7+
+- No external dependencies (uses only standard library)
+
+### Quick Start
+
+```bash
+# Convert all functions
+python converter.py path/to/usecode.dis output/
+
+# Convert specific functions
+python converter.py usecode.dis output/ --functions 0096 009A 0800
+
+# Verbose output
+python converter.py usecode.dis output/ -v
+```
+
+### Example
+
+```bash
+# Clone this repo
+git clone https://github.com/Kaligoo/u7-usecode-converter.git
+cd u7-usecode-converter
+
+# Get U7Revisited usecode file
+# (from https://github.com/ViridianGames/U7Revisited)
+
+# Convert function 0x0096 (ship gangplank)
+python converter.py ../U7Revisited/Redist/Data/usecode.dis output/ -f 0096 -v
+
+# Output: output/func_0096.lua
+```
+
+### Generated Lua
+
+The converter generates Lua with:
+- Header comments explaining the function
+- Event type constants
+- String data as local variables
+- Function signature with proper parameters
+- Intrinsic function mappings (not `unknown_XXXXH()`)
+
+Current output is a skeleton with instruction comments. Full bytecode-to-Lua translation is the next phase.
 
 ## Resources
 
