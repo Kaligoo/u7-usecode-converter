@@ -1,0 +1,23 @@
+# Generated output directories
+all_output/
+test_output/
+output/
+*.pyc
+__pycache__/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
